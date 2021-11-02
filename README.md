@@ -20,6 +20,6 @@ If you have registered but do not have access to the Slack workspace, please ema
 Thanks, and happy coding!  
 
 
-![](https://www.pexels.com/photo/person-coding-on-a-macbook-pro-4974912/). 
+![](https://images.pexels.com/photos/4974912/pexels-photo-4974912.jpeg?cs=srgb&dl=pexels-olia-danilevich-4974912.jpg&fm=jpg). 
 
 
