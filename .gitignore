@@ -39,5 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 # Extra folders
-proposal/
-video call/
+complete/
