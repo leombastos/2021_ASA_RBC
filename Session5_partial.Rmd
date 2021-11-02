@@ -32,10 +32,7 @@ soyk_w
 
 # 2) Exploratory Plots 
 ```{r Point and curve}
-ggplot(soyk_w, aes(x=k_rate_kgha, y=k_pct))+
-  geom_point(aes(color=location))+
-  geom_smooth(method="lm")+
-  facet_grid(.~location)
+
 
 ```
 
@@ -52,10 +49,7 @@ soyk_w2
 
 ```{r Extracting only one location}
 # Extracting only one location (s1)
-soyk_w2_s1 <- soyk_w2 %>%
-  filter(location=="s1")
-
-soyk_w2_s1
+soyk_w2_s1 
 
 ```
 
@@ -65,18 +59,15 @@ soyk_w2_s1
 ```{r RCBD model for location s1}
 options(contrasts = c("contr.sum", "contr.poly"))
 
-soyk_reg_s1<- lmer(k_pct ~ (1|frep) +
-                     k_rate_kgha,
-                   data=soyk_w2_s1)
 
 ```
 
 ```{r summary }
-summary(soyk_reg_s1)
+
 ```
 
 ```{r Anova}
-Anova(soyk_reg_s1, type = 3)
+
 ```
 
 # 4) Model Assumptions  
@@ -86,9 +77,7 @@ Draw example on board showing a bad model for the data.
 ```{r Extracting residuals information}
 soyk_reg_aug_s1 <- augment(soyk_reg_s1)
 
-soyk_reg_aug_s1$.stdresid <- resid(soyk_reg_s1, 
-                                   type = "pearson", 
-                                   scaled = T)
+soyk_reg_aug_s1$.stdresid <- resid()
 
 ```
 
@@ -101,9 +90,9 @@ On this plot, looking for:
 - Outliers (>3 or <-3)  
 
 ```{r Standardized Residuals vs. Fitted, message=F, warning=F}
-ggplot(soyk_reg_aug_s1, aes(x=.fitted, y=.stdresid))+
-  geom_point(aes(color=frep))+
-  geom_hline(yintercept = c(-3,0,3), color="orange")+
+ggplot(soyk_reg_aug_s1, aes(x = .fitted, y = .stdresid))+
+  geom_point(aes(color = frep))+
+  geom_hline(yintercept = c(-3,0,3), color = "orange")+
   geom_smooth()
 
 ```
@@ -131,71 +120,20 @@ ggplot(randeff_rep_s1, aes(sample=`(Intercept)`))+
 # 5) Automating analysis for all Locations with group_by(), nest(), and map()  
 ```{r Automated regression for all locations }
 
-soyk_reg_all <- soyk_w2 %>%
-  group_by(location) %>%
-  nest() %>%
-  # Fitting RCBD model
-  mutate(mod = map(data,
-                   ~lmer(k_pct ~ 
-                           (1|frep) + 
-                           k_rate_kgha,
-                         data = .x)
-  )) %>%
-  # Anova 
-  mutate(Anova = map(mod,
-                     ~Anova(.x, type = 3)
-  )) %>%
-  # Augmenting (for diagnostics and predictions)
-  mutate(aug=map(mod,
-                 ~augment(.x)
-  )) %>%
-  # Adding standardized residuals 
-  mutate(augstd=map2(aug,mod,
-                     ~mutate(.data = .x, 
-                             .stdresid = resid(.y,
-                                               type = "pearson",
-                                               scaled = T)
-                     ))) %>%
-  # Checking residuals 
-  mutate(diag1=map2(augstd, location,
-                    ~ggplot(data=.x, aes(x=.fitted, y=.stdresid))+
-                      geom_point(aes(color=frep))+
-                      geom_hline(yintercept = c(-3,0,3), 
-                                 color = "orange")+
-                      geom_smooth()+
-                      labs(title = paste0(.y))
-  ))
-
+soyk_reg_all
 ```
 
 ```{r Checking ANOVAs}
-soyk_reg_all$Anova
+
 ```
 
 ```{r Checking Residuals, message=F, warning=F}
-soyk_reg_all$diag1
+
 ```
 
 # 6) Plotting it all  
 ```{r Plotting all with regression lines}
-soyk_reg_all %>%
-  unnest(augstd) %>%
-  ggplot(aes(x = k_rate_kgha, y = k_pct, color = location))+
-  geom_point(aes(shape = location), 
-             size = 2, 
-             alpha = .6)+
-  #facet_wrap(.~Location)+
-  geom_line(aes(y = .fixed, linetype = location), 
-            size = 1)+
-  labs(x = "K Rate (kg K2O/ha)", 
-       y = "Plant K (%)")+
-  theme_solarized_2()+
-  scale_color_tableau()+
-  theme(legend.position = "bottom")
 
-ggsave(filename = "../output/Regression.png", 
-       width = 5, 
-       height = 4)
 ```
 
 
